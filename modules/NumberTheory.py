@@ -293,9 +293,9 @@ class NumberTheory:
 			n >>= 1
 			log += 1
 		
-		#                                                          /  n  \
-		# prime list for trial division and Miller-Rabin. pi(n) ~ O|-----|
-		#                                                          \log n/
+		#                                                          /  x  \
+		# prime list for trial division and Miller-Rabin. pi(x) ~ O|-----|
+		#                                                          \log x/
 		return NumberTheory.sieveOfEratosthenes((log >> 1) + 1)
 	
 	
