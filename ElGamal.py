@@ -1,3 +1,4 @@
+from tokenize import Number
 from modules.NumberTheory import NumberTheory
 
 import base64
@@ -47,7 +48,7 @@ class ElGamal:
 		p = _2q + 1
 		k = 1
 		
-		pList = NumberTheory.sieveOfEratosthenesForMillerRabin(p)
+		pList = NumberTheory.sieveOfEratosthenesForAlmostDeterministicMillerRabin(p)
 		
 		while not NumberTheory.fastPrimalityTest(p, pList, pList):
 			# p(k + 1) = 2(k + 1)q + 1 = (2kq + 1) + 2q = p(k) + 2q
@@ -325,12 +326,36 @@ bits = 2**10
 Alice = ElGamal()
 Bob = ElGamal()
 
-deltaNanoTime = time.time_ns()
-Alice.generateSafeCyclicGroup(bits)
-deltaNanoTime = time.time_ns() - deltaNanoTime
+# time test
+tests = 10
+
+totalTime = 0.0
+totalBits = 0.0
+percentage = 0.1
+
+for i in range(tests):
+	deltaNanoTime = time.time_ns()
+	Alice.generateSafeCyclicGroup(bits)
+	deltaNanoTime = time.time_ns() - deltaNanoTime
+	
+	currentTime = deltaNanoTime/1_000_000
+	
+	while percentage*tests - 0.001 < i:
+		print(f'{"{:.0f}".format(percentage*100)}%')
+		percentage += 0.1
+	
+	totalTime += currentTime
+	totalBits += Alice.bits
+	
+
+averageTime = totalTime/tests
+averageBits = totalBits/tests
+
+print(f'\nAverage time: {"{:.2f}".format(averageTime)}ms\nAverage bit length: {averageBits}\n\n\n')
 
 print(f'Time required to generate group: {"{:.2f}".format(deltaNanoTime/1_000_000)}ms\n\
 |   {Alice.bits}-bit prime\n|   Modulo:\n{Alice.modulo}\n|   Generator:\n{Alice.generator}\n|   Order:\n{Alice.order}\n\n\n')
+
 
 
 
