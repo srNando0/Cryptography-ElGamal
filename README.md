@@ -14,9 +14,9 @@ There is also an implementation of a series of number theory algorithms such:
 - Square root using the babylonian algorithm, and also an implementation of its ceil.
 - Fermat primality test.
 - Miller-Rabin primality test.
-- Sieve of Eratosthenes and its version for almost deterministic Miller-Rabin.
-- A fast primality test using 3 stages:  
-$O(\frac{\log n}{\log \log n})$ trial divisions, Fermat in base 2, and finally Miller-Rabin.
+- Sieve of Eratosthenes in $O(n \log \log n)$ and its version for constant probability or almost deterministic Miller-Rabin.
+- A fast primality test using 2 stages:  
+$O(\frac{\log n}{\log \log n})$ trial divisions and Miller-Rabin.
 - An algorithm to get the previous or next prime after a given number.
 - Trial division factorization algorithm $O(\sqrt n)$ time complexity.
 - Algorithm for finding multiplicative inverse based on extended euclidean algorithm $O(n)$ space complexity.
