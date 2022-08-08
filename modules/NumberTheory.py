@@ -150,7 +150,11 @@ class NumberTheory:
 		Returns:
 			bool: False if n composite, True if n is probably prime
 		"""
+		# h = number of digits of n
+		# m(h) = complexity of multiplication
+		
 		# not primes or even primes
+		# O(h)
 		if n == 2:
 			return True
 		elif n < 2 or n & 1 == 0:
@@ -158,6 +162,8 @@ class NumberTheory:
 		
 		#                                           s
 		# getting the contants s and d for n - 1 = 2  d
+		#    2
+		# O(h )
 		d = n - 1
 		s = 0
 		
@@ -171,14 +177,20 @@ class NumberTheory:
 		#  2
 		# x  - 1 = (x + 1)(x - 1) (mod n).
 		# if n is prime, n must divide only one of them
+		#
+		# O(h m(h) b)
 		for b in bList:
 			#  d
 			# b
+			#
+			# O(h m(h))
 			power = NumberTheory.modularExponentiation(b, d, n)
 			
 			# in case of n prime
 			#     d   +
 			# if b  = - 1 (mod n), then n can't divide other factors
+			#
+			# O(h)
 			if power == 1 or power == n - 1:
 				continue
 			# if not, n must divide another factor
@@ -189,15 +201,21 @@ class NumberTheory:
 			#                                  s
 			#                                 2  d
 			# which are the other factors of b     - 1
+			#
+			# O(h m(h))
 			nDivides = False
 			for _ in range(s - 1):
 				#         2
 				# /   i  \     i + 1
 				# |  2  d|    2      d
 				# \b     / = b         (mod n)
+				#
+				# O(m(h))
 				power = (power*power)%n
 				
 				# test
+				#
+				# O(h)
 				if power == n - 1:
 					nDivides = True
 					continue
@@ -249,6 +267,8 @@ class NumberTheory:
 		p = 2
 		
 		# while p is not the square root of maxNumber
+		#
+		# O(n log log n)
 		while (p*p <= maxNumber):
 			# skip if p is not prime
 			if not isPrimeList[p]:
@@ -276,7 +296,74 @@ class NumberTheory:
 	
 	
 	
-	def sieveOfEratosthenesForMillerRabin(number: int) -> list[int]:
+	def sieveOfEratosthenesForConstantProbabilityMillerRabin(number: int, c: int) -> list[int]:
+		"""
+		Does the sieve of Eratosthenes for constant probability Miller-Rabin
+		
+		Args:
+			number (int): the number to be tested in fast primality test
+			c (int): number such that Miller-Rabin fails 1 in 2^c
+		
+		Returns:
+			list[int]: a list of all primes less than O(log log n)
+		"""
+		# h = number of digits of number
+		# b = number of bases used in Miller-Rabin
+		# f(b, h) = probability of, at least, one Miller-Rabin fails out of h tests, using b bases
+		# m = 4 for Miller-Rabin, 2 for Solovay-Stassen
+		
+		# If the probability of Miller-Rabin fail with one number is
+		#            -b
+		# f(b, 1) = m
+		# then the probability of, at least, one Miller-Rabin fail in h tests is:
+		#                     -b h
+		# f(b, h) = 1 - (1 - m  )
+		#
+		# The limit below can be proved:     -k
+		#                                  -m                        /                             \
+		#   lim    f(k + log  x, x) = 1 - e            and   V n < m |  lim    f(k + log  x, x) = 0|
+		# x -> +oo          m                                        \x -> +oo          n          /
+		#
+		#                                                                             -c
+		# therefore, a good approximation for number of bases required for f(b, h) = m   is
+		# b = c + log  h
+		#            m
+		
+		# getting O(log n) ~ O(h)
+		n = number
+		h = 0
+		while n != 0:
+			n >>= 1
+			h += 1
+		
+		# getting O(log h) and b
+		n = h
+		logH = 0
+		while n != 0:
+			n >>= 1
+			logH += 1
+		b = c + logH
+		
+		# getting O(log b)
+		n = b
+		logB = 0
+		while n != 0:
+			n >>= 1
+			logB += 1
+		
+		#          /  x  \        -1
+		# pi(x) ~ O|-----| ===> pi  (x) ~ O(x log x)
+		#          \log x/
+		#   -1
+		# pi  (x) < x log  x
+		#                2
+		#
+		# because h bases is almost deterministic, use the minimum
+		return NumberTheory.sieveOfEratosthenes(min(b*logB, (h >> 1) + 1))
+	
+	
+	
+	def sieveOfEratosthenesForAlmostDeterministicMillerRabin(number: int) -> list[int]:
 		"""
 		Does the sieve of Eratosthenes for almost deterministic Miller-Rabin
 		
@@ -284,19 +371,25 @@ class NumberTheory:
 			number (int): the number to be tested in fast primality test
 		
 		Returns:
-			list[int]: a list of all primes less than O(log n/log log n)
+			list[int]: a list of all primes less than O(log n)
 		"""
-		# getting O(log n)
+		# h = number of digits of number
+		
+		# getting O(log n) ~ O(h)
 		n = number
-		log = 0
+		h = 0
 		while n != 0:
 			n >>= 1
-			log += 1
+			h += 1
 		
 		#                                                          /  x  \
 		# prime list for trial division and Miller-Rabin. pi(x) ~ O|-----|
 		#                                                          \log x/
-		return NumberTheory.sieveOfEratosthenes((log >> 1) + 1)
+		# time: O(h log log h)
+		#                    /  h  \
+		# number of primes: O|-----|
+		#                    \log h/
+		return NumberTheory.sieveOfEratosthenes((h >> 1) + 1)
 	
 	
 	
@@ -306,33 +399,30 @@ class NumberTheory:
 		
 		Args:
 			n (int): number to be tested
-			maxNumber (list[int): list of bases for Miller-Rabin
+			maxNumber (list[int]): list of bases for Miller-Rabin
 		
 		Returns:
 			bool: False if the number is composite, True if the number is probably prime
 		"""
-		# |n| = length of word that represents the number n
-		#     could be number of bits of n
+		# h = number of digits of n
+		# m(h) = complexity of multiplication
 		
-		# not primes or even primes: O(|n|)
+		# not primes or even primes: O(h)
 		if n == 2:
 			return True
 		elif n < 2 or n & 1 == 0:
 			return False
 		
-		#                        2
-		# trial division: O(d |n| )
+		# trial division: O(d m(h))
 		for d in dList:
 			if n%d == 0:
 				return n == d
 		
-		#                               3
-		# Fermat's test in base 2: O(|n| )
-		if not NumberTheory.fermatTest(n, [2]):
-			return False
+		# Fermat's test in base 2: O(h m(h))
+		#if not NumberTheory.fermatTest(n, [2]):
+		#	return False
 		
-		#                           3
-		# Miller-Rabin test: O(b |n| )
+		# Miller-Rabin test: O(h m(h) b)
 		return NumberTheory.millerRabin(n, bList)
 	
 	
@@ -347,6 +437,10 @@ class NumberTheory:
 		Returns:
 			int: the greatest probable prime less than or equal to number
 		"""
+		# h = number of digits of number
+		# m(h) = complexity of multiplication
+		# b(h) = number of bases for Miller-Rabin based on h
+		
 		# number must be greater than 2
 		if number <= 2:
 			return 2
@@ -356,12 +450,20 @@ class NumberTheory:
 		if prime & 1 == 0:
 			prime -= 1
 		
-		#   b
-		# -----
-		# log b
-		pList = NumberTheory.sieveOfEratosthenesForMillerRabin(prime)
+		#         /  h  \
+		# b(h) ~ O|-----|
+		#         \log h/
+		pList = NumberTheory.sieveOfEratosthenesForAlmostDeterministicMillerRabin(prime)
 		
 		# while not prime, decrement by 2
+		#                                      2
+		#                  /h m(h) b(h)\     /h  m(h)\
+		# trial division: O|------------| ~ O|-------|
+		#                  \  log b(h)  /    \ log h /
+		#                                   2
+		#                                 /h  m(h)\
+		# Miller-Rabin: O(h m(h) b(h)) ~ O|-------|
+		#                                 \ log h /
 		while not NumberTheory.fastPrimalityTest(prime, pList, pList):
 			prime -= 2
 		
@@ -371,7 +473,7 @@ class NumberTheory:
 	
 	def nextPrime(number: int) -> int:
 		"""
-		Gets the next prime
+		Gets the next prime using almost deterministic Miller-Rabin
 		
 		Args:
 			number (int): start number from where the search for primes begins
@@ -379,17 +481,80 @@ class NumberTheory:
 		Returns:
 			int: the smallest probable prime greater than or equal to number
 		"""
+		# h = number of digits of number
+		# m(h) = complexity of multiplication
+		# b(h) = number of bases for Miller-Rabin based on h
+		
 		# if number is even, begin with number + 1
 		prime = number
 		if prime & 1 == 0:
 			prime += 1
 		
-		#   b
-		# -----
-		# log b
-		pList = NumberTheory.sieveOfEratosthenesForMillerRabin(prime)
+		#         /  h  \
+		# b(h) ~ O|-----|
+		#         \log h/
+		#
+		# for constant Miller-Rabin false prime probability
+		#          /        \ h <--- numbers tested ~ distance between primes ~ O(h)
+		#         |      1   |
+		# k = 1 - |1 - ----- |
+		#         |     b(h) |
+		#          \   4    /
+		# b(h) ~ O(log h) <--- but that is not what we are doing
+		pList = NumberTheory.sieveOfEratosthenesForAlmostDeterministicMillerRabin(prime)
 		
 		# while not prime, decrement by 2
+		#                                      2
+		#                  /h m(h) b(h)\     /h  m(h)\
+		# trial division: O|------------| ~ O|-------|
+		#                  \  log b(h)  /    \ log h /
+		#                                   2
+		#                                 /h  m(h)\
+		# Miller-Rabin: O(h m(h) b(h)) ~ O|-------|
+		#                                 \ log h /
+		while not NumberTheory.fastPrimalityTest(prime, pList, pList):
+			prime -= 2
+		
+		return prime
+	
+	
+	
+	def nextPrimeConstantProbability(number: int, c: int) -> int:
+		"""
+		Gets the next prime
+		
+		Args:
+			number (int): start number from where the search for primes begins
+			c (int): number such that Miller-Rabin fails 1 in 2^c
+		
+		Returns:
+			int: the smallest probable prime greater than or equal to number
+		"""
+		# h = number of digits of number
+		# m(h) = complexity of multiplication
+		# b(h) = number of bases for Miller-Rabin based on h
+		
+		# if number is even, begin with number + 1
+		prime = number
+		if prime & 1 == 0:
+			prime += 1
+		
+		# for constant Miller-Rabin false prime probability
+		#          /        \ h <--- numbers tested ~ distance between primes ~ O(h)
+		#         |      1   |
+		# k = 1 - |1 - ----- |
+		#         |     b(h) |
+		#          \   4    /
+		# b(h) ~ O(c + log h)
+		pList = NumberTheory.sieveOfEratosthenesForConstantProbabilityMillerRabin(prime, c)
+		
+		# while not prime, decrement by 2
+		#
+		#                  /h m(h) b(h)\     /h m(h) log h\
+		# trial division: O|------------| ~ O|------------|
+		#                  \  log b(h)  /    \ log log h  /
+		#                                   
+		# Miller-Rabin: O(h m(h) b(h)) ~ O(h m(h) log h)
 		while not NumberTheory.fastPrimalityTest(prime, pList, pList):
 			prime -= 2
 		
